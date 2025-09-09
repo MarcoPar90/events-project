@@ -1,0 +1,100 @@
+version: '3.3'
+
+services:
+  db:
+    container_name: mysql
+    image: mysql:5.7
+    restart: always
+    environment:
+      #MYSQL_DATABASE: 'db'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: ${MYSQL_USER}
+      # You can use whatever password you like
+      MYSQL_PASSWORD: ${MYSQL_USER_PASSWORD}
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      # <Port exposed> : <MySQL Port running inside container>
+      - '3307:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+      - ./mysql-init/:/docker-entrypoint-initdb.d/   # qui metti gli script di inizializzazione
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app-events:
+    container_name: events-app
+    image: events-app-image
+    build:
+      context: ./events
+      dockerfile: Dockerfile.prod
+    volumes:
+      - ~/.m2:/root/.m2  # cache Maven local
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/events_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_USER_PASSWORD}
+      JWT_TOKEN: ${JWT_SECRET_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  app-booking:
+    container_name: booking-app
+    image: booking-app-image
+    build:
+      context: ./booking
+      dockerfile: Dockerfile.prod
+    volumes:
+      - ~/.m2:/root/.m2  # cache Maven local
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/booking_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_USER_PASSWORD}
+      JWT_TOKEN: ${JWT_SECRET_KEY}
+      USERS_URL: http://authentication-app:8082/api/v1/users
+      EVENTS_URL: http://events-app:8080/v1/api/events
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  app-authentication:
+    container_name: authentication-app
+    image: authentication-app-image
+    build:
+      context: ./authentication
+      dockerfile: Dockerfile.prod
+    volumes:
+      - ~/.m2:/root/.m2  # cache Maven local
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/auth?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_USER_PASSWORD}
+      JWT_TOKEN: ${JWT_SECRET_KEY}
+      JWT_TOKEN_EXPIRATION: ${JWT_TOKEN_EXPIRATION}
+      JWT_REFRESH_TOKEN: ${JWT_SECRET_REFRESH_KEY}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+# Names our volume
+volumes:
+  my-db:

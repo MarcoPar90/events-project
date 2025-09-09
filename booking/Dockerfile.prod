@@ -1,0 +1,16 @@
+# Stage 1: build
+FROM eclipse-temurin:24-jdk AS build
+WORKDIR /app
+RUN apt-get update && apt-get install -y maven && apt-get clean
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+# rinomina il jar in app.jar
+RUN cp /app/target/*.jar /app/target/app.jar
+
+# Stage 2: runtime
+FROM eclipse-temurin:24-jdk
+WORKDIR /app
+COPY --from=build /app/target/app.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]

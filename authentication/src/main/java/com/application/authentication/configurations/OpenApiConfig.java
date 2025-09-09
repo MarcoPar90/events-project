@@ -1,0 +1,36 @@
+package com.application.authentication.configurations;
+
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@SecurityScheme(
+        name = "bearerAuthAuthentication",
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        scheme = "bearer"
+)
+public class OpenApiConfig {
+    //http://localhost:8082/swagger-ui/index.html
+
+    @Bean
+    public OpenAPI customOpenApi() {
+        return new OpenAPI()
+                .components(new Components())
+                .info(new Info()
+                        .title("Users Application Apis")
+                        .description("Spring Boot REST API for users")
+                        .termsOfService("terms")
+                        .contact(new Contact().email("marco@mail.it").name("Marco Parisi").url(""))
+                        .license(new License().name("Apache License Version 2.0").url("https://www.apache.org/licenses/LICENSE-2.0"))
+                        .version("1.0")
+                );
+    }
+}

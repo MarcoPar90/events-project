@@ -1,0 +1,40 @@
+#override come of docker compose 
+services:
+  app-events:
+    build:
+      context: ./events
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./events:/app               # Monta codice sorgente
+      - ~/.m2:/root/.m2             # Cache Maven
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/events_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_USER_PASSWORD}
+    command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+  app-booking:
+    build:
+      context: ./booking
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./booking:/app               # Monta codice sorgente
+      - ~/.m2:/root/.m2             # Cache Maven
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/booking_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_USER_PASSWORD}
+    command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+  app-authentication:
+    build:
+      context: ./authentication
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./authentication:/app
+      - ~/.m2:/root/.m2
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/auth?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_USER_PASSWORD}
+    command: mvn spring-boot:run -Dspring-boot.run.profiles=dev

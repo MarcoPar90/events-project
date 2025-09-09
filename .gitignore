@@ -1,0 +1,35 @@
+### Build artifacts
+/target/
+build/
+
+### Maven Wrapper (opzionale)
+/.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+
+### IDE-specific directory
+.idea/
+*.iml
+.vscode/
+.settings/
+*.classpath
+*.project
+
+### Logs & temp files
+logs/
+*.log
+*.tmp
+
+### OS-specific
+.DS_Store
+Thumbs.db
+
+### Java artifacts
+*.class
+*.jar
+*.war
+
+### Environment & config sensitive
+.env
+
+### Spring Boot/Web files
+HELP.md
